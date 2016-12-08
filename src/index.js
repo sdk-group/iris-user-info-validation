@@ -1,0 +1,1 @@
+module.exports = require("./user-info-validation.js");
