@@ -103,7 +103,7 @@ class UserInfoValidation {
 					for (var j = 0; j < ll; j++) {
 						curr_v = req[fields[i]][j];
 						validator = this._validator(curr_v.type);
-						if (!validator)
+						if (!validator || user_info[fields[i]] == undefined)
 							continue;
 						let lk = this._limitationKey(fields[i], user_info[fields[i]]);
 						let node = validator.update(curr_v.params, limitations[lk], data);

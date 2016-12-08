@@ -38,7 +38,7 @@ module.exports = {
 			act[cnt_key] = 0;
 			act[ts_key] = Date.now();
 		}
-		act[cnt_key] += sc;
+		act[cnt_key] = parseInt(act[cnt_key]) + sc;
 
 		return act;
 	}
