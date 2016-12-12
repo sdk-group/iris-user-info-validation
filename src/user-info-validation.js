@@ -88,7 +88,7 @@ class UserInfoValidation {
 					for (var j = 0; j < ll; j++) {
 						curr_v = req[fields[i]][j];
 						validator = this._validator(curr_v.type);
-						if (!validator || !srv_lim[fields[i]])
+						if (!validator || !(srv_lim[fields[i]] || user_info[fields[i]]))
 							continue;
 						res = res && validator.validate(curr_v.params, limitations[this._limitationKey(fields[i], user_info[fields[i]])], data);
 						!res && (reason = fields[i]);
@@ -128,7 +128,7 @@ class UserInfoValidation {
 					for (var j = 0; j < ll; j++) {
 						curr_v = req[fields[i]][j];
 						validator = this._validator(curr_v.type);
-						if (!validator || !srv_lim[fields[i]])
+						if (!validator || !(srv_lim[fields[i]] || user_info[fields[i]]))
 							continue;
 						let lk = this._limitationKey(fields[i], user_info[fields[i]]);
 						let node = validator.update(curr_v.params, limitations[lk], data);
