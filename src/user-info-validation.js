@@ -27,6 +27,27 @@ class UserInfoValidation {
 			.then(res => _.mapValues(res, r => r.value ? r : false));
 	}
 
+	_serviceLimitations(keys) {
+		return Promise.map(_.castArray(keys), k => this.patchwerk.get("Service", {
+				key: k
+			}))
+			.then(services => {
+				let lim = {},
+					l = services.length,
+					cf;
+				for (var i = 0; i < l; i++) {
+					cf = services[i].get("custom_fields");
+					if (!cf)
+						continue;
+					for (var j in cf) {
+						if (cf[j])
+							lim[j] = true;
+					}
+				}
+				return lim;
+			});
+	}
+
 	_limitationKey(key, value) {
 		return `user-info-limitation-${key}-${value}`;
 	}
@@ -44,18 +65,20 @@ class UserInfoValidation {
 				uif: this.patchwerk.get("user-info-fields", {
 					key: "user_info_fields"
 				}),
+				srv_lim: this._serviceLimitations(data.service),
 				limitations: this._fieldLimitations(user_info)
 			})
 			.then(({
 				uif: uif_obj,
+				srv_lim: srv_lim,
 				limitations: limitations
 			}) => {
-				console.log("UIF & LIMS", uif_obj, limitations);
+				console.log("UIF & LIMS", uif_obj, limitations, srv_lim);
 				let req = uif_obj.requiredValidation();
-				console.log(require("util")
-					.inspect(req, {
-						depth: null
-					}));
+				// console.log(require("util")
+				// 	.inspect(req, {
+				// 		depth: null
+				// 	}));
 				let fields = Object.keys(req),
 					l = fields.length,
 					validator, ll, curr_v, res = true,
@@ -65,7 +88,7 @@ class UserInfoValidation {
 					for (var j = 0; j < ll; j++) {
 						curr_v = req[fields[i]][j];
 						validator = this._validator(curr_v.type);
-						if (!validator || user_info[fields[i]] == undefined)
+						if (!validator || !srv_lim[fields[i]])
 							continue;
 						res = res && validator.validate(curr_v.params, limitations[this._limitationKey(fields[i], user_info[fields[i]])], data);
 						!res && (reason = fields[i]);
@@ -87,10 +110,12 @@ class UserInfoValidation {
 				uif: this.patchwerk.get("user-info-fields", {
 					key: "user_info_fields"
 				}),
+				srv_lim: this._serviceLimitations(data.service),
 				limitations: this._fieldLimitations(user_info)
 			})
 			.then(({
 				uif: uif_obj,
+				srv_lim: srv_lim,
 				limitations: limitations
 			}) => {
 				console.log("TOSAVE", limitations);
@@ -103,7 +128,7 @@ class UserInfoValidation {
 					for (var j = 0; j < ll; j++) {
 						curr_v = req[fields[i]][j];
 						validator = this._validator(curr_v.type);
-						if (!validator || user_info[fields[i]] == undefined)
+						if (!validator || !srv_lim[fields[i]])
 							continue;
 						let lk = this._limitationKey(fields[i], user_info[fields[i]]);
 						let node = validator.update(curr_v.params, limitations[lk], data);
